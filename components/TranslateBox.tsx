@@ -22,7 +22,7 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
   const [translation, setTranslation] = useState('')
   const [duplicate, setDuplicate] = useState<Word | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
-  const [spellSuggestions, setSpellSuggestions] = useState<{ original: string; replacement: string }[]>([])
+  const [spellSuggestions, setSpellSuggestions] = useState<{ original: string; replacement: string; offset: number; length: number }[]>([])
   const [article, setArticle] = useState<Article>(null)
 
   const debouncedInput = useDebounce(input, 300)
@@ -184,7 +184,8 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
       {/* Spell suggestion */}
       <SpellSuggestion
         suggestions={spellSuggestions}
-        onApply={(replacement) => { setInput(replacement); setSpellSuggestions([]) }}
+        input={input}
+        onApply={(corrected) => { setInput(corrected); setSpellSuggestions([]) }}
       />
 
       {/* Result */}

@@ -16,7 +16,7 @@ function isRateLimited(ip: string): boolean {
 }
 
 function stripArticle(word: string): string {
-  return word.replace(/^(der|die|das)\s+/i, '')
+  return word.replace(/^(der|die|das|ein|eine|einen|einem|eines|einer)\s+/i, '').trim()
 }
 
 function parseGender(wikitext: string): 'der' | 'die' | 'das' | null {
@@ -33,6 +33,26 @@ function parseGender(wikitext: string): 'der' | 'die' | 'das' | null {
   }
 }
 
+async function lookupWord(word: string): Promise<'der' | 'die' | 'das' | null> {
+  const capitalized = word.charAt(0).toUpperCase() + word.slice(1)
+  const url = `https://de.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(capitalized)}&prop=wikitext&format=json`
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5000)
+
+  try {
+    const response = await fetch(url, { signal: controller.signal })
+    clearTimeout(timeout)
+    if (!response.ok) return null
+    const data = await response.json()
+    const wikitext: string = data?.parse?.wikitext?.['*'] ?? ''
+    return parseGender(wikitext)
+  } catch {
+    clearTimeout(timeout)
+    return null
+  }
+}
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
   if (isRateLimited(ip)) {
@@ -46,27 +66,16 @@ export async function POST(req: NextRequest) {
   }
 
   const cleaned = stripArticle(word.trim())
-  const capitalized = cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
 
-  const url = `https://de.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(capitalized)}&prop=wikitext&format=json`
+  // Try the full phrase first
+  let article = await lookupWord(cleaned)
 
-  try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 5000)
-
-    const response = await fetch(url, { signal: controller.signal })
-    clearTimeout(timeout)
-
-    if (!response.ok) {
-      return NextResponse.json({ article: null })
-    }
-
-    const data = await response.json()
-    const wikitext: string = data?.parse?.wikitext?.['*'] ?? ''
-
-    const article = parseGender(wikitext)
-    return NextResponse.json({ article })
-  } catch {
-    return NextResponse.json({ article: null })
+  // For multi-word phrases, fall back to the last word (main noun in German)
+  if (!article && cleaned.includes(' ')) {
+    const words = cleaned.split(/\s+/).filter(Boolean)
+    const lastWord = words[words.length - 1]
+    article = await lookupWord(lastWord)
   }
+
+  return NextResponse.json({ article })
 }

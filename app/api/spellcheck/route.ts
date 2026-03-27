@@ -57,6 +57,8 @@ export async function POST(req: NextRequest) {
     .map((m: { offset: number; length: number; replacements: { value: string }[]; message: string }) => ({
       original: text.trim().slice(m.offset, m.offset + m.length),
       replacement: m.replacements[0].value,
+      offset: m.offset,
+      length: m.length,
     }))
 
   return NextResponse.json({ suggestions })
