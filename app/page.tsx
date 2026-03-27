@@ -24,13 +24,12 @@ export default function Home() {
 
   const handleDelete = async (id: string) => {
     setWords(prev => prev.filter(w => w.id !== id))
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    const { error } = await supabase.from('words').delete().eq('id', id)
-    if (error) {
+    const res = await fetch('/api/words', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    if (!res.ok) {
       fetch('/api/words').then(r => r.json()).then(setWords)
     }
   }
