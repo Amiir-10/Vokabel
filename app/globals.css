@@ -13,6 +13,10 @@
   --color-amber-text: #633806;
   --color-green-bg: #E1F5EE;
   --color-green-text: #0F6E56;
+  --color-article-der: #3B82F6;
+  --color-article-das: #22C55E;
+  --color-article-die: #EF4444;
+  --color-article-die-pl: #EAB308;
 }
 
 [data-theme="dark"] {
@@ -28,6 +32,10 @@
   --color-amber-text: #FAC775;
   --color-green-bg: #0D2E24;
   --color-green-text: #5DD4A8;
+  --color-article-der: #60A5FA;
+  --color-article-das: #4ADE80;
+  --color-article-die: #F87171;
+  --color-article-die-pl: #FACC15;
 }
 
 @theme inline {

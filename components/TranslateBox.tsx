@@ -7,7 +7,8 @@ import SpeakButton from './SpeakButton'
 import MicButton from './MicButton'
 import SpellSuggestion from './SpellSuggestion'
 import { getLangCode } from '@/lib/speech'
-import type { Direction, Word } from '@/lib/types'
+import type { Direction, Word, Article } from '@/lib/types'
+import { getArticleColor } from '@/lib/types'
 
 interface Props {
   onWordSaved: (word: Word) => void
@@ -22,6 +23,7 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
   const [duplicate, setDuplicate] = useState<Word | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
   const [spellSuggestions, setSpellSuggestions] = useState<{ original: string; replacement: string }[]>([])
+  const [article, setArticle] = useState<Article>(null)
 
   const debouncedInput = useDebounce(input, 300)
 
@@ -29,6 +31,7 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
     if (!debouncedInput.trim()) {
       setTranslation('')
       setDuplicate(null)
+      setArticle(null)
       return
     }
 
@@ -47,10 +50,39 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
         .then(r => r.json())
         .then(d => setTranslation(d.translation ?? ''))
         .finally(() => setIsTranslating(false))
+
+      if (direction === 'de-en') {
+        fetch('/api/article', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ word: debouncedInput.trim() }),
+        })
+          .then(r => r.json())
+          .then(d => setArticle(d.article ?? null))
+          .catch(() => setArticle(null))
+      } else {
+        setArticle(null)
+      }
     } else {
       setTranslation(dup.translation)
+      setArticle(dup.article ?? null)
     }
   }, [debouncedInput, direction, existingWords])
+
+  // For en-de: fetch article for the German translation once it arrives
+  useEffect(() => {
+    if (direction !== 'en-de' || !translation || isTranslating || duplicate) {
+      return
+    }
+    fetch('/api/article', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ word: translation }),
+    })
+      .then(r => r.json())
+      .then(d => setArticle(d.article ?? null))
+      .catch(() => setArticle(null))
+  }, [translation, direction, isTranslating, duplicate])
 
   useEffect(() => {
     if (!debouncedInput.trim()) {
@@ -74,7 +106,7 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
     const res = await fetch('/api/words', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ word: input.trim(), translation, direction }),
+      body: JSON.stringify({ word: input.trim(), translation, direction, article }),
     })
 
     if (res.ok) {
@@ -82,6 +114,7 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
       onWordSaved(saved)
       setInput('')
       setTranslation('')
+      setArticle(null)
     }
   }
 
@@ -91,6 +124,7 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
     setTranslation('')
     setDuplicate(null)
     setSpellSuggestions([])
+    setArticle(null)
   }
 
   const [sourceLang, targetLang] = direction === 'de-en' ? ['Deutsch', 'English'] : ['English', 'Deutsch']
@@ -161,11 +195,17 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <span style={{ fontSize: '18px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {!isTranslating && article && direction === 'en-de' && (
+              <span style={{ fontSize: '14px', fontWeight: 500, color: getArticleColor(article) }}>{article}</span>
+            )}
             {isTranslating ? '...' : translation}
             {!isTranslating && translation && (
               <SpeakButton text={translation} lang={getLangCode(direction, 'target')} size={14} />
             )}
           </span>
+          {!isTranslating && article && direction === 'de-en' && (
+            <span style={{ fontSize: '13px', fontWeight: 500, color: getArticleColor(article), marginRight: '8px' }}>{article}</span>
+          )}
           {!duplicate && translation && (
             <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
               <kbd style={{

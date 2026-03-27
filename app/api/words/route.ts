@@ -16,7 +16,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { word, translation, direction } = await req.json()
+  const { word, translation, direction, article } = await req.json()
 
   if (!word || !translation || !direction) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('words')
-    .insert({ word: word.trim(), translation, direction })
+    .insert({ word: word.trim(), translation, direction, article: article ?? null })
     .select()
     .single()
 
