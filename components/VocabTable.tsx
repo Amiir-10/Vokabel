@@ -126,38 +126,43 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
                 }}
                 className="vocab-row"
               >
-                <td style={{ padding: '12px', fontSize: '14px', fontWeight: 500 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {w.article && w.direction === 'de-en' && (
-                      <span style={{ fontSize: '12px', fontWeight: 500, color: getArticleColor(w.article) }}>{w.article}</span>
-                    )}
-                    {w.word}
-                    <span className="speak-btn" style={{ opacity: 0, transition: 'opacity 0.15s' }}>
-                      <SpeakButton text={w.word} lang={getLangCode(w.direction, 'source')} size={14} />
-                    </span>
-                    {newWordId === w.id && (
-                      <span style={{
-                        display: 'inline-block', fontSize: '10px', fontWeight: 500,
-                        color: 'var(--color-green-text)', background: 'var(--color-green-bg)',
-                        borderRadius: '4px', padding: '2px 6px', marginLeft: '2px',
-                      }}>new</span>
-                    )}
-                  </span>
-                </td>
-                <td style={{ padding: '12px', fontSize: '14px', color: 'var(--color-text-muted)' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {w.article && w.direction === 'en-de' && (
-                      <span style={{ fontSize: '12px', fontWeight: 500, color: getArticleColor(w.article) }}>{w.article}</span>
-                    )}
-                    {w.translation}
-                    <span className="speak-btn" style={{ opacity: 0, transition: 'opacity 0.15s' }}>
-                      <SpeakButton text={w.translation} lang={getLangCode(w.direction, 'target')} size={14} />
-                    </span>
-                  </span>
-                </td>
-                <td style={{ padding: '12px', fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                  {w.direction === 'de-en' ? 'DE \u2192 EN' : 'EN \u2192 DE'}
-                </td>
+                {(() => {
+                  const deWord = w.direction === 'de-en' ? w.word : w.translation
+                  const enWord = w.direction === 'de-en' ? w.translation : w.word
+                  return (
+                    <>
+                      <td style={{ padding: '12px', fontSize: '14px', fontWeight: 500 }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {w.article && (
+                            <span style={{ fontSize: '12px', fontWeight: 500, color: getArticleColor(w.article) }}>{w.article}</span>
+                          )}
+                          {deWord}
+                          <span className="speak-btn" style={{ opacity: 0, transition: 'opacity 0.15s' }}>
+                            <SpeakButton text={deWord} lang="de-DE" size={14} />
+                          </span>
+                          {newWordId === w.id && (
+                            <span style={{
+                              display: 'inline-block', fontSize: '10px', fontWeight: 500,
+                              color: 'var(--color-green-text)', background: 'var(--color-green-bg)',
+                              borderRadius: '4px', padding: '2px 6px', marginLeft: '2px',
+                            }}>new</span>
+                          )}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', fontSize: '14px', color: 'var(--color-text-muted)' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {enWord}
+                          <span className="speak-btn" style={{ opacity: 0, transition: 'opacity 0.15s' }}>
+                            <SpeakButton text={enWord} lang="en-US" size={14} />
+                          </span>
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                        DE &rarr; EN
+                      </td>
+                    </>
+                  )
+                })()}
                 <td style={{ padding: '12px', fontSize: '12px', color: 'var(--color-text-muted)' }}>{formatDate(w.created_at)}</td>
                 <td style={{ padding: '12px' }}>
                   <span style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
