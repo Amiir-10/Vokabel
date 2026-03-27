@@ -24,9 +24,10 @@ export default function DuplicateBanner({ savedOn, onJump }: Props) {
         padding: '10px 16px',
         background: 'var(--color-amber-bg)',
         borderTop: '0.5px solid var(--color-amber-border)',
+        color: 'var(--color-amber-text)',
       }}
     >
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#854F0B" strokeWidth="1.5" style={{ flexShrink: 0 }}>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ flexShrink: 0 }}>
         <circle cx="8" cy="8" r="6.5"/>
         <path d="M8 5v3.5M8 11v.5"/>
       </svg>
@@ -38,7 +39,7 @@ export default function DuplicateBanner({ savedOn, onJump }: Props) {
         style={{
           fontSize: '13px',
           fontWeight: 500,
-          color: '#854F0B',
+          color: 'var(--color-amber-text)',
           background: 'none',
           border: 'none',
           cursor: 'pointer',

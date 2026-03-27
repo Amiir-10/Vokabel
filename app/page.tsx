@@ -2,9 +2,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import TranslateBox from '@/components/TranslateBox'
 import VocabTable from '@/components/VocabTable'
+import ThemeToggle from '@/components/ThemeToggle'
+import { useTheme } from '@/hooks/useTheme'
 import type { Word } from '@/lib/types'
 
 export default function Home() {
+  const { theme, toggleTheme } = useTheme()
   const [words, setWords] = useState<Word[]>([])
   const [newWordId, setNewWordId] = useState<string | null>(null)
   const [highlightId, setHighlightId] = useState<string | null>(null)
@@ -45,11 +48,14 @@ export default function Home() {
 
   return (
     <main style={{ maxWidth: '680px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
-      <div style={{ marginBottom: '2.5rem' }}>
-        <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
-          Vokabel
-        </p>
-        <h1 style={{ fontSize: '22px', fontWeight: 500 }}>Your German vocabulary</h1>
+      <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
+            Vokabel
+          </p>
+          <h1 style={{ fontSize: '22px', fontWeight: 500 }}>Your German vocabulary</h1>
+        </div>
+        <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </div>
 
       <TranslateBox

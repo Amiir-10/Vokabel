@@ -3,6 +3,10 @@ import { useState, useEffect, KeyboardEvent } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useDebounce } from '@/hooks/useDebounce'
 import DuplicateBanner from './DuplicateBanner'
+import SpeakButton from './SpeakButton'
+import MicButton from './MicButton'
+import SpellSuggestion from './SpellSuggestion'
+import { getLangCode } from '@/lib/speech'
 import type { Direction, Word } from '@/lib/types'
 
 interface Props {
@@ -17,6 +21,7 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
   const [translation, setTranslation] = useState('')
   const [duplicate, setDuplicate] = useState<Word | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
+  const [spellSuggestions, setSpellSuggestions] = useState<{ original: string; replacement: string }[]>([])
 
   const debouncedInput = useDebounce(input, 300)
 
@@ -47,6 +52,22 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
     }
   }, [debouncedInput, direction, existingWords])
 
+  useEffect(() => {
+    if (!debouncedInput.trim()) {
+      setSpellSuggestions([])
+      return
+    }
+    const sourceLangCode = direction === 'de-en' ? 'de' : 'en'
+    fetch('/api/spellcheck', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: debouncedInput.trim(), language: sourceLangCode }),
+    })
+      .then(r => r.json())
+      .then(d => setSpellSuggestions(d.suggestions ?? []))
+      .catch(() => setSpellSuggestions([]))
+  }, [debouncedInput, direction])
+
   const handleKeyDown = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter' || !input.trim() || !translation || duplicate) return
 
@@ -69,13 +90,14 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
     setInput('')
     setTranslation('')
     setDuplicate(null)
+    setSpellSuggestions([])
   }
 
   const [sourceLang, targetLang] = direction === 'de-en' ? ['Deutsch', 'English'] : ['English', 'Deutsch']
 
   return (
     <div style={{
-      background: 'white',
+      background: 'var(--color-card-bg)',
       border: '0.5px solid var(--color-card-border)',
       borderRadius: '12px',
       overflow: 'hidden',
@@ -83,14 +105,14 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
     }}>
       {/* Language bar */}
       <div style={{ display: 'flex', borderBottom: '0.5px solid var(--color-card-border)' }}>
-        <div style={{ flex: 1, padding: '10px 16px', fontSize: '13px', fontWeight: 500, textAlign: 'center', background: '#F5F5F3', color: 'var(--color-text-primary)' }}>
+        <div style={{ flex: 1, padding: '10px 16px', fontSize: '13px', fontWeight: 500, textAlign: 'center', background: 'var(--color-surface)', color: 'var(--color-text-primary)' }}>
           {sourceLang}
         </div>
         <button
           onClick={swapDirection}
           style={{
             width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'white', border: 'none', cursor: 'pointer',
+            background: 'var(--color-card-bg)', border: 'none', cursor: 'pointer',
             borderLeft: '0.5px solid var(--color-card-border)',
             borderRight: '0.5px solid var(--color-card-border)',
           }}
@@ -106,20 +128,30 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
       </div>
 
       {/* Input */}
-      <div style={{ padding: '16px' }}>
+      <div style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={`Type a ${sourceLang} word...`}
           style={{
-            width: '100%', fontSize: '18px', fontWeight: 400,
+            flex: 1, fontSize: '18px', fontWeight: 400,
             border: 'none', outline: 'none', background: 'transparent',
             color: 'var(--color-text-primary)', fontFamily: 'inherit',
           }}
           autoFocus
         />
+        <MicButton lang={getLangCode(direction, 'source')} onResult={setInput} />
+        {input.trim() && (
+          <SpeakButton text={input.trim()} lang={getLangCode(direction, 'source')} />
+        )}
       </div>
+
+      {/* Spell suggestion */}
+      <SpellSuggestion
+        suggestions={spellSuggestions}
+        onApply={(replacement) => { setInput(replacement); setSpellSuggestions([]) }}
+      />
 
       {/* Result */}
       {(translation || isTranslating) && (
@@ -128,13 +160,16 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
           borderTop: '0.5px solid var(--color-card-border)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <span style={{ fontSize: '18px', color: 'var(--color-text-muted)' }}>
+          <span style={{ fontSize: '18px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             {isTranslating ? '...' : translation}
+            {!isTranslating && translation && (
+              <SpeakButton text={translation} lang={getLangCode(direction, 'target')} size={14} />
+            )}
           </span>
           {!duplicate && translation && (
             <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
               <kbd style={{
-                background: '#F5F5F3', border: '0.5px solid var(--color-card-border)',
+                background: 'var(--color-surface)', border: '0.5px solid var(--color-card-border)',
                 borderRadius: '4px', padding: '1px 6px', fontSize: '11px', fontWeight: 500,
               }}>Enter</kbd> to save
             </span>

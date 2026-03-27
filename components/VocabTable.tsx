@@ -1,6 +1,8 @@
 'use client'
 import { useState } from 'react'
 import type { Word } from '@/lib/types'
+import SpeakButton from './SpeakButton'
+import { getLangCode } from '@/lib/speech'
 
 interface Props {
   words: Word[]
@@ -49,7 +51,7 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
           style={{
             flex: 1, height: '34px', padding: '0 12px', fontSize: '13px',
             border: '0.5px solid var(--color-card-border)', borderRadius: '8px',
-            outline: 'none', fontFamily: 'inherit', background: 'white',
+            outline: 'none', fontFamily: 'inherit', background: 'var(--color-card-bg)',
             color: 'var(--color-text-primary)',
           }}
         />
@@ -61,7 +63,7 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
               height: '34px', padding: '0 12px', fontSize: '12px', fontWeight: 500,
               border: filter === f ? 'none' : '0.5px solid var(--color-card-border)',
               borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit',
-              background: filter === f ? '#E1F5EE' : 'white',
+              background: filter === f ? 'var(--color-green-bg)' : 'var(--color-card-bg)',
               color: filter === f ? 'var(--color-green-text)' : 'var(--color-text-muted)',
             }}
           >
@@ -97,16 +99,28 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
                 className="vocab-row"
               >
                 <td style={{ padding: '12px', fontSize: '14px', fontWeight: 500 }}>
-                  {w.word}
-                  {newWordId === w.id && (
-                    <span style={{
-                      display: 'inline-block', fontSize: '10px', fontWeight: 500,
-                      color: 'var(--color-green-text)', background: 'var(--color-green-bg)',
-                      borderRadius: '4px', padding: '2px 6px', marginLeft: '6px',
-                    }}>new</span>
-                  )}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {w.word}
+                    <span className="speak-btn" style={{ opacity: 0, transition: 'opacity 0.15s' }}>
+                      <SpeakButton text={w.word} lang={getLangCode(w.direction, 'source')} size={14} />
+                    </span>
+                    {newWordId === w.id && (
+                      <span style={{
+                        display: 'inline-block', fontSize: '10px', fontWeight: 500,
+                        color: 'var(--color-green-text)', background: 'var(--color-green-bg)',
+                        borderRadius: '4px', padding: '2px 6px', marginLeft: '2px',
+                      }}>new</span>
+                    )}
+                  </span>
                 </td>
-                <td style={{ padding: '12px', fontSize: '14px', color: 'var(--color-text-muted)' }}>{w.translation}</td>
+                <td style={{ padding: '12px', fontSize: '14px', color: 'var(--color-text-muted)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {w.translation}
+                    <span className="speak-btn" style={{ opacity: 0, transition: 'opacity 0.15s' }}>
+                      <SpeakButton text={w.translation} lang={getLangCode(w.direction, 'target')} size={14} />
+                    </span>
+                  </span>
+                </td>
                 <td style={{ padding: '12px', fontSize: '12px', color: 'var(--color-text-muted)' }}>
                   {w.direction === 'de-en' ? 'DE \u2192 EN' : 'EN \u2192 DE'}
                 </td>
@@ -137,7 +151,7 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
         </table>
       </div>
 
-      <style>{`.vocab-row:hover .del-btn { opacity: 1 !important; } .vocab-row:hover { background: #F7F7F5 !important; }`}</style>
+      <style>{`.vocab-row:hover .del-btn { opacity: 1 !important; } .vocab-row:hover .speak-btn { opacity: 1 !important; } .vocab-row:hover { background: var(--color-row-hover) !important; }`}</style>
     </div>
   )
 }

@@ -2,6 +2,9 @@
 
 :root {
   --color-bg: #FAFAF9;
+  --color-card-bg: #FFFFFF;
+  --color-surface: #F5F5F3;
+  --color-row-hover: #F7F7F5;
   --color-card-border: #E5E5E3;
   --color-text-primary: #1A1A18;
   --color-text-muted: #888780;
@@ -10,6 +13,21 @@
   --color-amber-text: #633806;
   --color-green-bg: #E1F5EE;
   --color-green-text: #0F6E56;
+}
+
+[data-theme="dark"] {
+  --color-bg: #141413;
+  --color-card-bg: #1C1C1A;
+  --color-surface: #222220;
+  --color-row-hover: #252523;
+  --color-card-border: #2E2E2C;
+  --color-text-primary: #E8E8E6;
+  --color-text-muted: #8A8A82;
+  --color-amber-bg: #3D2E0A;
+  --color-amber-border: #7A5B1A;
+  --color-amber-text: #FAC775;
+  --color-green-bg: #0D2E24;
+  --color-green-text: #5DD4A8;
 }
 
 @theme inline {
