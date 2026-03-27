@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg: #FAFAF9;
+  --color-card-border: #E5E5E3;
+  --color-text-primary: #1A1A18;
+  --color-text-muted: #888780;
+  --color-amber-bg: #FAEEDA;
+  --color-amber-border: #FAC775;
+  --color-amber-text: #633806;
+  --color-green-bg: #E1F5EE;
+  --color-green-text: #0F6E56;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+}
