@@ -49,7 +49,7 @@ function parseGender(wikitext: string): 'der' | 'die' | 'das' | null {
   return null
 }
 
-async function lookupWord(word: string): Promise<Article> {
+async function fetchWikitext(word: string): Promise<string | null> {
   const capitalized = word.charAt(0).toUpperCase() + word.slice(1)
   const url = `https://de.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(capitalized)}&prop=wikitext&format=json`
 
@@ -61,13 +61,37 @@ async function lookupWord(word: string): Promise<Article> {
     clearTimeout(timeout)
     if (!response.ok) return null
     const data = await response.json()
-    const wikitext: string = data?.parse?.wikitext?.['*'] ?? ''
-    if (isPluralForm(wikitext)) return 'die (Pl.)'
-    return parseGender(wikitext)
+    return data?.parse?.wikitext?.['*'] ?? null
   } catch {
     clearTimeout(timeout)
     return null
   }
+}
+
+async function lookupWord(word: string): Promise<Article> {
+  const wikitext = await fetchWikitext(word)
+  if (wikitext) {
+    if (isPluralForm(wikitext)) return 'die (Pl.)'
+    const gender = parseGender(wikitext)
+    if (gender) return gender
+  }
+
+  // Compound word decomposition: try suffixes to find the base noun
+  // German gender is determined by the last component (e.g., Klimagerät → Gerät)
+  if (word.length > 5) {
+    const mid = Math.ceil(word.length / 3)
+    for (let i = mid; i <= word.length - 3; i++) {
+      const suffix = word.slice(i)
+      const suffixWikitext = await fetchWikitext(suffix)
+      if (suffixWikitext && suffixWikitext.includes('Substantiv')) {
+        if (isPluralForm(suffixWikitext)) return 'die (Pl.)'
+        const gender = parseGender(suffixWikitext)
+        if (gender) return gender
+      }
+    }
+  }
+
+  return null
 }
 
 export async function POST(req: NextRequest) {
@@ -83,12 +107,18 @@ export async function POST(req: NextRequest) {
   }
 
   const cleaned = stripArticle(word.trim())
+  const wordCount = cleaned.split(/\s+/).filter(Boolean).length
+
+  // Skip article detection for sentences (3+ words)
+  if (wordCount >= 3) {
+    return NextResponse.json({ article: null })
+  }
 
   // Try the full phrase first
   let article = await lookupWord(cleaned)
 
-  // For multi-word phrases, fall back to the last word (main noun in German)
-  if (!article && cleaned.includes(' ')) {
+  // For two-word phrases, fall back to the last word (main noun in German)
+  if (!article && wordCount === 2) {
     const words = cleaned.split(/\s+/).filter(Boolean)
     const lastWord = words[words.length - 1]
     article = await lookupWord(lastWord)
