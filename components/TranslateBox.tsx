@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, KeyboardEvent } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useDebounce } from '@/hooks/useDebounce'
 import DuplicateBanner from './DuplicateBanner'
 import SpeakButton from './SpeakButton'
@@ -206,17 +206,35 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <span style={{ fontSize: '18px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {!isTranslating && article && direction === 'en-de' && (
-              <span style={{ fontSize: '14px', fontWeight: 500, color: getArticleColor(article) }}>{article}</span>
-            )}
+            <AnimatePresence>
+              {!isTranslating && article && direction === 'en-de' && (
+                <motion.span
+                  key="article-en-de"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ fontSize: '14px', fontWeight: 500, color: getArticleColor(article) }}
+                >{article}</motion.span>
+              )}
+            </AnimatePresence>
             {isTranslating ? '...' : translation}
             {!isTranslating && translation && (
               <SpeakButton text={translation} lang={getLangCode(direction, 'target')} size={14} />
             )}
           </span>
-          {!isTranslating && article && direction === 'de-en' && (
-            <span style={{ fontSize: '13px', fontWeight: 500, color: getArticleColor(article), marginRight: '8px' }}>{article}</span>
-          )}
+          <AnimatePresence>
+            {!isTranslating && article && direction === 'de-en' && (
+              <motion.span
+                key="article-de-en"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ fontSize: '13px', fontWeight: 500, color: getArticleColor(article), marginRight: '8px' }}
+              >{article}</motion.span>
+            )}
+          </AnimatePresence>
           {!duplicate && translation && (
             <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
               <kbd style={{

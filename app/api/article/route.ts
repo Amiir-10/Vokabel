@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { Article } from '@/lib/types'
 
 const rateLimit = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT_WINDOW = 60_000
@@ -19,26 +20,41 @@ function stripArticle(word: string): string {
   return word.replace(/^(der|die|das|ein|eine|einen|einem|eines|einer)\s+/i, '').trim()
 }
 
+function isPluralForm(wikitext: string): boolean {
+  return wikitext.includes('Deklinierte Form') && /Plural/.test(wikitext)
+}
+
 function parseGender(wikitext: string): 'der' | 'die' | 'das' | null {
   if (!wikitext.includes('Substantiv')) return null
 
   const genusMatch = wikitext.match(/Genus\s*\d?\s*=\s*([mfn])/i)
-  if (!genusMatch) return null
-
-  switch (genusMatch[1].toLowerCase()) {
-    case 'm': return 'der'
-    case 'f': return 'die'
-    case 'n': return 'das'
-    default: return null
+  if (genusMatch) {
+    switch (genusMatch[1].toLowerCase()) {
+      case 'm': return 'der'
+      case 'f': return 'die'
+      case 'n': return 'das'
+    }
   }
+
+  // Fallback: check heading markers like {{Wortart|Substantiv|Deutsch}}, {{f}}
+  const headingMatch = wikitext.match(/\{\{Wortart\|Substantiv\|Deutsch\}\}.*?\{\{([mfn])\}\}/i)
+  if (headingMatch) {
+    switch (headingMatch[1].toLowerCase()) {
+      case 'm': return 'der'
+      case 'f': return 'die'
+      case 'n': return 'das'
+    }
+  }
+
+  return null
 }
 
-async function lookupWord(word: string): Promise<'der' | 'die' | 'das' | null> {
+async function lookupWord(word: string): Promise<Article> {
   const capitalized = word.charAt(0).toUpperCase() + word.slice(1)
   const url = `https://de.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(capitalized)}&prop=wikitext&format=json`
 
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 5000)
+  const timeout = setTimeout(() => controller.abort(), 8000)
 
   try {
     const response = await fetch(url, { signal: controller.signal })
@@ -46,6 +62,7 @@ async function lookupWord(word: string): Promise<'der' | 'die' | 'das' | null> {
     if (!response.ok) return null
     const data = await response.json()
     const wikitext: string = data?.parse?.wikitext?.['*'] ?? ''
+    if (isPluralForm(wikitext)) return 'die (Pl.)'
     return parseGender(wikitext)
   } catch {
     clearTimeout(timeout)

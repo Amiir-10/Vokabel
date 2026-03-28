@@ -101,7 +101,7 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
       </div>
 
       {/* Table */}
-      <div style={{ border: '0.5px solid var(--color-card-border)', borderRadius: '12px', overflow: 'hidden' }}>
+      <div style={{ border: '0.5px solid var(--color-card-border)', borderRadius: '12px', overflow: 'hidden' }}><div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '0.5px solid var(--color-card-border)' }}>
@@ -235,7 +235,7 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
             )}
           </tbody>
         </table>
-      </div>
+      </div></div>
 
       <style>{`.vocab-row:hover .del-btn { opacity: 1 !important; } .vocab-row:hover .speak-btn { opacity: 1 !important; } .vocab-row:hover .example-btn { opacity: 1 !important; } .vocab-row:hover { background: var(--color-row-hover) !important; }`}</style>
     </div>
