@@ -41,16 +41,20 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
     setDuplicate(dup ?? null)
 
     if (!dup) {
+      const controller = new AbortController()
       setIsTranslating(true)
       fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ word: debouncedInput.trim(), direction }),
+        signal: controller.signal,
       })
         .then(r => r.json())
-        .then(d => setTranslation(d.translation ?? ''))
-        .finally(() => setIsTranslating(false))
+        .then(d => { if (!controller.signal.aborted) setTranslation(d.translation ?? '') })
+        .catch(() => {})
+        .finally(() => { if (!controller.signal.aborted) setIsTranslating(false) })
 
+      return () => controller.abort()
     } else {
       setTranslation(dup.translation)
       setArticle(dup.article ?? null)
@@ -106,7 +110,15 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
       body: JSON.stringify({ text: debouncedInput.trim(), language: sourceLangCode }),
     })
       .then(r => r.json())
-      .then(d => setSpellSuggestions(d.suggestions ?? []))
+      .then(d => {
+        let suggestions = d.suggestions ?? []
+        if (direction === 'en-de') {
+          suggestions = suggestions.filter((s: { original: string; replacement: string }) =>
+            s.original.toLowerCase() !== s.replacement.toLowerCase()
+          )
+        }
+        setSpellSuggestions(suggestions)
+      })
       .catch(() => setSpellSuggestions([]))
   }, [debouncedInput, direction])
 
