@@ -23,6 +23,11 @@ function extractArticle(text: string): Article {
   return match[1].toLowerCase() as 'der' | 'die' | 'das'
 }
 
+// German nouns are always capitalized; verbs/adjectives/adverbs are lowercase
+function isGermanNoun(germanWord: string): boolean {
+  return germanWord.length > 0 && germanWord[0] === germanWord[0].toUpperCase() && germanWord[0] !== germanWord[0].toLowerCase()
+}
+
 async function callDeepL(text: string[], sourceLang: string, targetLang: string) {
   const res = await fetch('https://api-free.deepl.com/v2/translate', {
     method: 'POST',
@@ -65,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     const translation = data.translations?.[0]?.text ?? ''
     let article: Article = null
-    if (shouldDetectArticle && data.translations?.[1]?.text) {
+    if (shouldDetectArticle && isGermanNoun(translation) && data.translations?.[1]?.text) {
       article = extractArticle(data.translations[1].text)
     }
 
@@ -78,7 +83,7 @@ export async function POST(req: NextRequest) {
     const translation = data.translations?.[0]?.text ?? ''
     let article: Article = null
 
-    if (shouldDetectArticle && translation) {
+    if (shouldDetectArticle && translation && isGermanNoun(trimmed)) {
       const articleData = await callDeepL(['the ' + translation], 'EN', 'DE')
       if (articleData?.translations?.[0]?.text) {
         article = extractArticle(articleData.translations[0].text)
