@@ -50,7 +50,7 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
         signal: controller.signal,
       })
         .then(r => r.json())
-        .then(d => { if (!controller.signal.aborted) setTranslation(d.translation ?? '') })
+        .then(d => { if (!controller.signal.aborted) { setTranslation(d.translation ?? ''); setArticle(d.article ?? null) } })
         .catch(() => {})
         .finally(() => { if (!controller.signal.aborted) setIsTranslating(false) })
 
@@ -60,43 +60,6 @@ export default function TranslateBox({ onWordSaved, existingWords, onJumpToWord 
       setArticle(dup.article ?? null)
     }
   }, [debouncedInput, direction, existingWords])
-
-  // For de-en: fetch article for the German input word
-  useEffect(() => {
-    if (direction !== 'de-en' || !debouncedInput.trim() || duplicate) {
-      if (!duplicate) setArticle(null)
-      return
-    }
-    const controller = new AbortController()
-    fetch('/api/article', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ word: debouncedInput.trim() }),
-      signal: controller.signal,
-    })
-      .then(r => r.json())
-      .then(d => setArticle(d.article ?? null))
-      .catch(() => setArticle(null))
-    return () => controller.abort()
-  }, [debouncedInput, direction, duplicate])
-
-  // For en-de: fetch article for the German translation once it arrives
-  useEffect(() => {
-    if (direction !== 'en-de' || !translation || isTranslating || duplicate) {
-      return
-    }
-    const controller = new AbortController()
-    fetch('/api/article', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ word: translation }),
-      signal: controller.signal,
-    })
-      .then(r => r.json())
-      .then(d => setArticle(d.article ?? null))
-      .catch(() => setArticle(null))
-    return () => controller.abort()
-  }, [translation, direction, isTranslating, duplicate])
 
   useEffect(() => {
     if (!debouncedInput.trim()) {
