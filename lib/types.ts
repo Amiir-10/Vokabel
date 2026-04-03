@@ -9,7 +9,12 @@ export interface Word {
   direction: Direction
   created_at: string
   article: Article
+  score: number
+  last_reviewed: string | null
 }
+
+export type QuizDirection = 'de-en' | 'en-de'
+export type AnswerMode = 'multiple-choice' | 'free-text'
 
 export function getArticleColor(article: Article): string {
   switch (article) {

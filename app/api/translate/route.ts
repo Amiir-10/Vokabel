@@ -63,8 +63,8 @@ export async function POST(req: NextRequest) {
   const shouldDetectArticle = wordCount <= 2
 
   if (direction === 'en-de') {
-    // EN->DE: batch both translation and article detection in one call
-    const texts = shouldDetectArticle ? [trimmed, 'the ' + trimmed] : [trimmed]
+    // EN->DE: batch translation, "the X", and "a X" in one call
+    const texts = shouldDetectArticle ? [trimmed, 'the ' + trimmed, 'a ' + trimmed] : [trimmed]
     const data = await callDeepL(texts, 'EN', 'DE')
     if (!data) return NextResponse.json({ error: 'Translation failed' }, { status: 500 })
 
@@ -72,6 +72,13 @@ export async function POST(req: NextRequest) {
     let article: Article = null
     if (shouldDetectArticle && isGermanNoun(translation) && data.translations?.[1]?.text) {
       article = extractArticle(data.translations[1].text)
+      // Distinguish feminine "die" from plural "die (Pl.)"
+      if (article === 'die' && data.translations?.[2]?.text) {
+        const aResult = data.translations[2].text.toLowerCase()
+        if (!aResult.startsWith('eine ')) {
+          article = 'die (Pl.)'
+        }
+      }
     }
 
     return NextResponse.json({ translation, article })
@@ -87,6 +94,16 @@ export async function POST(req: NextRequest) {
       const articleData = await callDeepL(['the ' + translation], 'EN', 'DE')
       if (articleData?.translations?.[0]?.text) {
         article = extractArticle(articleData.translations[0].text)
+        // Distinguish feminine "die" from plural "die (Pl.)"
+        if (article === 'die') {
+          const aData = await callDeepL(['a ' + translation], 'EN', 'DE')
+          if (aData?.translations?.[0]?.text) {
+            const aResult = aData.translations[0].text.toLowerCase()
+            if (!aResult.startsWith('eine ')) {
+              article = 'die (Pl.)'
+            }
+          }
+        }
       }
     }
 

@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import TranslateBox from '@/components/TranslateBox'
 import VocabTable from '@/components/VocabTable'
 import ThemeToggle from '@/components/ThemeToggle'
+import FlashcardModal from '@/components/FlashcardModal'
 import { useTheme } from '@/hooks/useTheme'
 import type { Word } from '@/lib/types'
 
@@ -11,6 +12,7 @@ export default function Home() {
   const [words, setWords] = useState<Word[]>([])
   const [newWordId, setNewWordId] = useState<string | null>(null)
   const [highlightId, setHighlightId] = useState<string | null>(null)
+  const [flashcardOpen, setFlashcardOpen] = useState(false)
   const tableRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -55,7 +57,21 @@ export default function Home() {
           </p>
           <h1 style={{ fontSize: '22px', fontWeight: 500 }}>Your German vocabulary</h1>
         </div>
-        <ThemeToggle theme={theme} onToggle={toggleTheme} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => setFlashcardOpen(true)}
+            disabled={words.length === 0}
+            style={{
+              padding: '6px 12px', borderRadius: '7px', border: '1px solid var(--color-card-border)',
+              background: 'transparent', color: 'var(--color-text-primary)',
+              fontSize: '13px', fontWeight: 500, cursor: words.length > 0 ? 'pointer' : 'not-allowed',
+              opacity: words.length > 0 ? 1 : 0.4,
+            }}
+          >
+            Flashcards
+          </button>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+        </div>
       </div>
 
       <TranslateBox
@@ -72,6 +88,12 @@ export default function Home() {
           highlightId={highlightId}
         />
       </div>
+
+      <FlashcardModal
+        isOpen={flashcardOpen}
+        onClose={() => setFlashcardOpen(false)}
+        words={words}
+      />
     </main>
   )
 }
