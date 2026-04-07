@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import FlashcardCard from '@/components/FlashcardCard'
 import FlashcardSummary from '@/components/FlashcardSummary'
 import type { Word, QuizDirection, AnswerMode } from '@/lib/types'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 interface FlashcardModalProps {
   isOpen: boolean
@@ -26,6 +27,7 @@ export default function FlashcardModal({ isOpen, onClose, words }: FlashcardModa
   const [currentIndex, setCurrentIndex] = useState(0)
   const [results, setResults] = useState<Result[]>([])
   const [loading, setLoading] = useState(false)
+  const isMobile = useIsMobile()
 
   // Body scroll lock
   useEffect(() => {
@@ -78,11 +80,12 @@ export default function FlashcardModal({ isOpen, onClose, words }: FlashcardModa
   }
 
   const toggleStyle = (active: boolean) => ({
-    padding: '7px 14px', borderRadius: '6px', border: 'none', cursor: 'pointer',
-    fontSize: '13px', fontWeight: 500,
+    padding: isMobile ? '6px 10px' : '7px 14px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+    fontSize: isMobile ? '12px' : '13px', fontWeight: 500,
     background: active ? 'var(--color-text-primary)' : 'transparent',
     color: active ? 'var(--color-bg)' : 'var(--color-text-muted)',
     transition: 'all 0.15s',
+    whiteSpace: 'nowrap' as const,
   })
 
   return (
@@ -96,7 +99,7 @@ export default function FlashcardModal({ isOpen, onClose, words }: FlashcardModa
             position: 'fixed', inset: 0, zIndex: 50,
             background: 'rgba(0,0,0,0.5)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '24px',
+            padding: isMobile ? '12px' : '24px',
           }}
           onClick={e => { if (e.target === e.currentTarget) onClose() }}
         >
@@ -109,7 +112,7 @@ export default function FlashcardModal({ isOpen, onClose, words }: FlashcardModa
               width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto',
               background: 'var(--color-card-bg, var(--color-bg))',
               border: '1px solid var(--color-card-border)',
-              borderRadius: '16px', padding: '28px',
+              borderRadius: isMobile ? '12px' : '16px', padding: isMobile ? '16px' : '28px',
             }}
           >
             {/* Header */}
@@ -141,14 +144,14 @@ export default function FlashcardModal({ isOpen, onClose, words }: FlashcardModa
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div>
                   <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-muted)', marginBottom: '8px' }}>Direction</p>
-                  <div style={{ display: 'flex', gap: '4px', padding: '4px', borderRadius: '8px', border: '1px solid var(--color-card-border)', background: 'var(--color-bg)', width: 'fit-content' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '4px', borderRadius: '8px', border: '1px solid var(--color-card-border)', background: 'var(--color-bg)', width: 'fit-content', maxWidth: '100%' }}>
                     <button style={toggleStyle(direction === 'de-en')} onClick={() => setDirection('de-en')}>German → English</button>
                     <button style={toggleStyle(direction === 'en-de')} onClick={() => setDirection('en-de')}>English → German</button>
                   </div>
                 </div>
                 <div>
                   <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-muted)', marginBottom: '8px' }}>Mode</p>
-                  <div style={{ display: 'flex', gap: '4px', padding: '4px', borderRadius: '8px', border: '1px solid var(--color-card-border)', background: 'var(--color-bg)', width: 'fit-content' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '4px', borderRadius: '8px', border: '1px solid var(--color-card-border)', background: 'var(--color-bg)', width: 'fit-content', maxWidth: '100%' }}>
                     <button style={toggleStyle(mode === 'multiple-choice')} onClick={() => setMode('multiple-choice')}>Multiple choice</button>
                     <button style={toggleStyle(mode === 'free-text')} onClick={() => setMode('free-text')}>Free text</button>
                   </div>

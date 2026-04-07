@@ -47,3 +47,15 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text-primary);
 }
+
+@media (max-width: 640px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .vocab-row .del-btn,
+  .vocab-row .speak-btn,
+  .vocab-row .example-btn {
+    opacity: 1 !important;
+  }
+}

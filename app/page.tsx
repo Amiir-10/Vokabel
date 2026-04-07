@@ -5,10 +5,12 @@ import VocabTable from '@/components/VocabTable'
 import ThemeToggle from '@/components/ThemeToggle'
 import FlashcardModal from '@/components/FlashcardModal'
 import { useTheme } from '@/hooks/useTheme'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import type { Word } from '@/lib/types'
 
 export default function Home() {
   const { theme, toggleTheme } = useTheme()
+  const isMobile = useIsMobile()
   const [words, setWords] = useState<Word[]>([])
   const [newWordId, setNewWordId] = useState<string | null>(null)
   const [highlightId, setHighlightId] = useState<string | null>(null)
@@ -49,7 +51,7 @@ export default function Home() {
   }, [])
 
   return (
-    <main style={{ maxWidth: '680px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+    <main style={{ maxWidth: '680px', margin: '0 auto', padding: isMobile ? '1.25rem 0.75rem' : '2.5rem 1.5rem' }}>
       <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>

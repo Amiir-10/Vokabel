@@ -3,6 +3,7 @@ import { useState, Fragment } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { Word } from '@/lib/types'
 import { getArticleColor } from '@/lib/types'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import SpeakButton from './SpeakButton'
 import { getLangCode } from '@/lib/speech'
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function VocabTable({ words, onDelete, newWordId, highlightId }: Props) {
+  const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'de-en' | 'en-de'>('all')
   const [expandedExampleId, setExpandedExampleId] = useState<string | null>(null)
@@ -71,33 +73,35 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
       </div>
 
       {/* Search + filters */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search your words..."
           style={{
-            flex: 1, height: '34px', padding: '0 12px', fontSize: '13px',
+            flex: isMobile ? '1 1 100%' : 1, height: '34px', padding: '0 12px', fontSize: '13px',
             border: '0.5px solid var(--color-card-border)', borderRadius: '8px',
             outline: 'none', fontFamily: 'inherit', background: 'var(--color-card-bg)',
             color: 'var(--color-text-primary)',
           }}
         />
-        {(['all', 'de-en', 'en-de'] as const).map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            style={{
-              height: '34px', padding: '0 12px', fontSize: '12px', fontWeight: 500,
-              border: filter === f ? 'none' : '0.5px solid var(--color-card-border)',
-              borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit',
-              background: filter === f ? 'var(--color-green-bg)' : 'var(--color-card-bg)',
-              color: filter === f ? 'var(--color-green-text)' : 'var(--color-text-muted)',
-            }}
-          >
-            {f === 'all' ? 'All' : f === 'de-en' ? 'DE \u2192 EN' : 'EN \u2192 DE'}
-          </button>
-        ))}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {(['all', 'de-en', 'en-de'] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              style={{
+                height: '34px', padding: '0 12px', fontSize: '12px', fontWeight: 500,
+                border: filter === f ? 'none' : '0.5px solid var(--color-card-border)',
+                borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit',
+                background: filter === f ? 'var(--color-green-bg)' : 'var(--color-card-bg)',
+                color: filter === f ? 'var(--color-green-text)' : 'var(--color-text-muted)',
+              }}
+            >
+              {f === 'all' ? 'All' : f === 'de-en' ? 'DE \u2192 EN' : 'EN \u2192 DE'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Table */}
@@ -105,12 +109,18 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '0.5px solid var(--color-card-border)' }}>
-              {['Word', 'Translation', 'Direction', 'Saved', ''].map(h => (
-                <th key={h} style={{
+              {[
+                { label: 'Word', mobile: true },
+                { label: 'Translation', mobile: true },
+                { label: 'Direction', mobile: false },
+                { label: 'Saved', mobile: false },
+                { label: '', mobile: true },
+              ].map(h => (
+                <th key={h.label} className={h.mobile ? undefined : 'hide-on-mobile'} style={{
                   padding: '8px 12px', fontSize: '11px', fontWeight: 500,
                   color: 'var(--color-text-muted)', textTransform: 'uppercase',
                   letterSpacing: '0.06em', textAlign: 'left',
-                }}>{h}</th>
+                }}>{h.label}</th>
               ))}
             </tr>
           </thead>
@@ -129,9 +139,10 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
                 {(() => {
                   const deWord = w.direction === 'de-en' ? w.word : w.translation
                   const enWord = w.direction === 'de-en' ? w.translation : w.word
+                  const cellPad = isMobile ? '8px 6px' : '12px'
                   return (
                     <>
-                      <td style={{ padding: '12px', fontSize: '14px', fontWeight: 500 }}>
+                      <td style={{ padding: cellPad, fontSize: '14px', fontWeight: 500 }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           {w.article && (
                             <span style={{ fontSize: '12px', fontWeight: 500, color: getArticleColor(w.article) }}>{w.article}</span>
@@ -149,7 +160,7 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
                           )}
                         </span>
                       </td>
-                      <td style={{ padding: '12px', fontSize: '14px', color: 'var(--color-text-muted)' }}>
+                      <td style={{ padding: cellPad, fontSize: '14px', color: 'var(--color-text-muted)' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           {enWord}
                           <span className="speak-btn" style={{ opacity: 0, transition: 'opacity 0.15s' }}>
@@ -157,21 +168,21 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
                           </span>
                         </span>
                       </td>
-                      <td style={{ padding: '12px', fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                        DE &rarr; EN
+                      <td className="hide-on-mobile" style={{ padding: cellPad, fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                        {w.direction === 'de-en' ? 'DE \u2192 EN' : 'EN \u2192 DE'}
                       </td>
                     </>
                   )
                 })()}
-                <td style={{ padding: '12px', fontSize: '12px', color: 'var(--color-text-muted)' }}>{formatDate(w.created_at)}</td>
-                <td style={{ padding: '12px' }}>
+                <td className="hide-on-mobile" style={{ padding: isMobile ? '8px 6px' : '12px', fontSize: '12px', color: 'var(--color-text-muted)' }}>{formatDate(w.created_at)}</td>
+                <td style={{ padding: isMobile ? '8px 6px' : '12px' }}>
                   <span style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
                     <button
                       onClick={() => handleExampleClick(w)}
                       className="example-btn"
                       aria-label="Show example sentence"
                       style={{
-                        width: '24px', height: '24px', borderRadius: '6px',
+                        width: isMobile ? '36px' : '24px', height: isMobile ? '36px' : '24px', borderRadius: '6px',
                         border: 'none',
                         background: expandedExampleId === w.id ? 'var(--color-surface)' : 'transparent',
                         cursor: 'pointer', color: 'var(--color-text-muted)',
@@ -189,7 +200,7 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
                       className="del-btn"
                       aria-label="Delete word"
                       style={{
-                        width: '24px', height: '24px', borderRadius: '6px',
+                        width: isMobile ? '36px' : '24px', height: isMobile ? '36px' : '24px', borderRadius: '6px',
                         border: 'none', background: 'transparent', cursor: 'pointer',
                         fontSize: '14px', color: 'var(--color-text-muted)',
                         opacity: 0, transition: 'opacity 0.15s',
@@ -207,7 +218,7 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.15 }}
                   >
-                    <td colSpan={5} style={{
+                    <td colSpan={isMobile ? 3 : 5} style={{
                       padding: '8px 12px 12px',
                       fontSize: '13px',
                       color: 'var(--color-text-muted)',
@@ -228,7 +239,7 @@ export default function VocabTable({ words, onDelete, newWordId, highlightId }: 
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} style={{ padding: '32px', textAlign: 'center', fontSize: '14px', color: 'var(--color-text-muted)' }}>
+                <td colSpan={isMobile ? 3 : 5} style={{ padding: '32px', textAlign: 'center', fontSize: '14px', color: 'var(--color-text-muted)' }}>
                   {search ? 'No words match your search.' : 'No words saved yet. Type one above!'}
                 </td>
               </tr>

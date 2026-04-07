@@ -1,5 +1,6 @@
 'use client'
 import type { Word } from '@/lib/types'
+import { normalizeWord } from '@/lib/types'
 
 interface Result {
   wordId: string
@@ -35,6 +36,7 @@ export default function FlashcardSummary({ results, batch, onPlayAgain, onClose 
         {results.map((r, i) => {
           const word = batch.find(w => w.id === r.wordId)
           if (!word) return null
+          const norm = normalizeWord(word)
           return (
             <div key={r.wordId} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -42,9 +44,9 @@ export default function FlashcardSummary({ results, batch, onPlayAgain, onClose 
               background: r.correct ? 'var(--color-green-bg)' : 'rgba(239,68,68,0.08)',
               border: `1px solid ${r.correct ? 'var(--color-green-border, #bbf7d0)' : 'rgba(239,68,68,0.2)'}`,
             }}>
-              <span style={{ fontSize: '14px', color: 'var(--color-text-primary)' }}>{word.word}</span>
+              <span style={{ fontSize: '14px', color: 'var(--color-text-primary)' }}>{norm.german}</span>
               <span style={{ fontSize: '12px', color: r.correct ? 'var(--color-green-text)' : '#ef4444' }}>
-                {r.correct ? '✓' : '✗'} {word.translation}
+                {r.correct ? '✓' : '✗'} {norm.english}
               </span>
             </div>
           )

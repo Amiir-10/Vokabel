@@ -16,6 +16,13 @@ export interface Word {
 export type QuizDirection = 'de-en' | 'en-de'
 export type AnswerMode = 'multiple-choice' | 'free-text'
 
+export function normalizeWord(w: Word): { german: string; english: string; article: Article } {
+  if (w.direction === 'de-en') {
+    return { german: w.word, english: w.translation, article: w.article }
+  }
+  return { german: w.translation, english: w.word, article: w.article }
+}
+
 export function getArticleColor(article: Article): string {
   switch (article) {
     case 'der': return 'var(--color-article-der)'

@@ -1,8 +1,9 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getArticleColor } from '@/lib/types'
+import { getArticleColor, normalizeWord } from '@/lib/types'
 import type { Word, QuizDirection, AnswerMode } from '@/lib/types'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 interface FlashcardCardProps {
   word: Word
@@ -13,12 +14,13 @@ interface FlashcardCardProps {
 }
 
 function getQuestion(word: Word, direction: QuizDirection): string {
-  // de-en: show German word; en-de: show English word
-  return direction === 'de-en' ? word.word : word.translation
+  const { german, english } = normalizeWord(word)
+  return direction === 'de-en' ? german : english
 }
 
 function getCorrectAnswer(word: Word, direction: QuizDirection): string {
-  return direction === 'de-en' ? word.translation : word.word
+  const { german, english } = normalizeWord(word)
+  return direction === 'de-en' ? english : german
 }
 
 function getDistractors(word: Word, allWords: Word[], direction: QuizDirection, count: number): string[] {
@@ -28,6 +30,7 @@ function getDistractors(word: Word, allWords: Word[], direction: QuizDirection, 
 }
 
 export default function FlashcardCard({ word, direction, mode, allWords, onAnswer }: FlashcardCardProps) {
+  const isMobile = useIsMobile()
   const [answered, setAnswered] = useState(false)
   const [correct, setCorrect] = useState(false)
   const [shownCorrect, setShownCorrect] = useState('')
@@ -63,7 +66,7 @@ export default function FlashcardCard({ word, direction, mode, allWords, onAnswe
         body: JSON.stringify({
           userAnswer,
           correctAnswer,
-          originalWord: word.word,
+          originalWord: question,
           direction,
         }),
       })
@@ -88,18 +91,18 @@ export default function FlashcardCard({ word, direction, mode, allWords, onAnswe
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Question */}
       <div style={{
-        textAlign: 'center', padding: '32px 24px', borderRadius: '12px',
+        textAlign: 'center', padding: isMobile ? '20px 16px' : '32px 24px', borderRadius: '12px',
         background: 'var(--color-bg)', border: '1px solid var(--color-card-border)',
       }}>
-        {direction === 'de-en' && word.article && (
+        {direction === 'de-en' && normalizeWord(word).article && (
           <span style={{
             fontSize: '13px', fontWeight: 600, marginRight: '6px',
-            color: getArticleColor(word.article),
+            color: getArticleColor(normalizeWord(word).article),
           }}>
-            {word.article}
+            {normalizeWord(word).article}
           </span>
         )}
-        <span style={{ fontSize: '26px', fontWeight: 500, color: 'var(--color-text-primary)' }}>
+        <span style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 500, color: 'var(--color-text-primary)' }}>
           {question}
         </span>
         <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '8px' }}>
@@ -109,7 +112,7 @@ export default function FlashcardCard({ word, direction, mode, allWords, onAnswe
 
       {/* Answer area */}
       {mode === 'multiple-choice' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '10px' }}>
           {options.map((opt, i) => {
             let bg = 'var(--color-bg)'
             let border = 'var(--color-card-border)'
