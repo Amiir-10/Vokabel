@@ -1,27 +1,41 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import TranslateBox from '@/components/TranslateBox'
 import VocabTable from '@/components/VocabTable'
 import ThemeToggle from '@/components/ThemeToggle'
 import FlashcardModal from '@/components/FlashcardModal'
 import { useTheme } from '@/hooks/useTheme'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { createClient } from '@/lib/supabase'
 import type { Word } from '@/lib/types'
 
 export default function Home() {
   const { theme, toggleTheme } = useTheme()
   const isMobile = useIsMobile()
+  const router = useRouter()
   const [words, setWords] = useState<Word[]>([])
   const [newWordId, setNewWordId] = useState<string | null>(null)
   const [highlightId, setHighlightId] = useState<string | null>(null)
   const [flashcardOpen, setFlashcardOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const tableRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch('/api/words')
       .then(r => r.json())
       .then(setWords)
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(data => setIsAdmin(data.isAdmin ?? false))
   }, [])
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
 
   const handleWordSaved = (word: Word) => {
     setWords(prev => [word, ...prev])
@@ -60,6 +74,18 @@ export default function Home() {
           <h1 style={{ fontSize: '22px', fontWeight: 500 }}>Your German vocabulary</h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {isAdmin && (
+            <a
+              href="/admin"
+              style={{
+                padding: '6px 12px', borderRadius: '7px', border: '1px solid var(--color-card-border)',
+                background: 'transparent', color: 'var(--color-text-muted)',
+                fontSize: '13px', fontWeight: 500, cursor: 'pointer', textDecoration: 'none',
+              }}
+            >
+              Admin
+            </a>
+          )}
           <button
             onClick={() => setFlashcardOpen(true)}
             disabled={words.length === 0}
@@ -73,6 +99,16 @@ export default function Home() {
             Flashcards
           </button>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          <button
+            onClick={handleSignOut}
+            style={{
+              padding: '6px 12px', borderRadius: '7px', border: '1px solid var(--color-card-border)',
+              background: 'transparent', color: 'var(--color-text-muted)',
+              fontSize: '13px', fontWeight: 500, cursor: 'pointer',
+            }}
+          >
+            Sign out
+          </button>
         </div>
       </div>
 

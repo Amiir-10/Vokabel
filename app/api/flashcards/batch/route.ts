@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const { data, error } = await supabase.from('words').select('*')
   if (error) return NextResponse.json({ error: 'Failed to fetch words' }, { status: 500 })
 

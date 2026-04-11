@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'wordId and correct are required' }, { status: 400 })
   }
 
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const { data: existing, error: fetchError } = await supabase
     .from('words')
     .select('score')

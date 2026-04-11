@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabaseServer'
 
 export async function GET() {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const { data, error } = await supabase
     .from('words')
     .select('*')
@@ -22,7 +22,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
 
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   const { data: existing } = await supabase
     .from('words')
@@ -40,7 +45,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('words')
-    .insert({ word: word.trim(), translation, direction, article: article ?? null })
+    .insert({ word: word.trim(), translation, direction, article: article ?? null, user_id: user.id })
     .select()
     .single()
 
@@ -58,7 +63,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Missing id' }, { status: 400 })
   }
 
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const { error } = await supabase.from('words').delete().eq('id', id)
 
   if (error) {

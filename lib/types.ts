@@ -4,6 +4,7 @@ export type Article = 'der' | 'die' | 'das' | 'die (Pl.)' | null
 
 export interface Word {
   id: string
+  user_id: string
   word: string
   translation: string
   direction: Direction
