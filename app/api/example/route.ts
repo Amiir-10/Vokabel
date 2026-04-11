@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabaseServer'
 
 const rateLimit = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT_WINDOW = 60_000
@@ -22,6 +23,10 @@ export async function POST(req: NextRequest) {
   if (isRateLimited(ip)) {
     return NextResponse.json(empty, { status: 429 })
   }
+
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json(empty, { status: 401 })
 
   const { word } = await req.json()
 

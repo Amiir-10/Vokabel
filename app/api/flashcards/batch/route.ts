@@ -45,6 +45,9 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { data, error } = await supabase.from('words').select('*')
   if (error) return NextResponse.json({ error: 'Failed to fetch words' }, { status: 500 })
 

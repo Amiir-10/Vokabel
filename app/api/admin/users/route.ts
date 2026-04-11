@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
 
   const { email, password } = await req.json()
-  if (!email || !password) {
-    return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
+  if (!email || !password || password.length < 8) {
+    return NextResponse.json({ error: 'Email and password (min 8 chars) are required' }, { status: 400 })
   }
 
   const supabase = createAdminClient()
@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
     email,
     password,
     email_confirm: true,
+    user_metadata: { must_change_password: true },
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

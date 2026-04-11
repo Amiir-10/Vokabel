@@ -121,12 +121,12 @@ export default function AdminPage() {
             style={inputStyle}
           />
           <input
-            type="text"
-            placeholder="Temporary password"
+            type="password"
+            placeholder="Temporary password (min 8 characters)"
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={8}
             style={inputStyle}
           />
           {message && (

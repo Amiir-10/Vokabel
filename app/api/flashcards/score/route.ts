@@ -28,10 +28,14 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { data: existing, error: fetchError } = await supabase
     .from('words')
     .select('score')
     .eq('id', wordId)
+    .eq('user_id', user.id)
     .single()
 
   if (fetchError || !existing) {
@@ -43,6 +47,7 @@ export async function POST(req: NextRequest) {
     .from('words')
     .update({ score: newScore, last_reviewed: new Date().toISOString() })
     .eq('id', wordId)
+    .eq('user_id', user.id)
 
   if (updateError) return NextResponse.json({ error: 'Failed to update score' }, { status: 500 })
 

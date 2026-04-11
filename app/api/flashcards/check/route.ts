@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { similarity, SIMILARITY_THRESHOLD } from '@/lib/levenshtein'
 import type { QuizDirection } from '@/lib/types'
+import { createServerClient } from '@/lib/supabaseServer'
 
 const rateLimit = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT_WINDOW = 60_000
@@ -36,6 +37,10 @@ export async function POST(req: NextRequest) {
   if (isRateLimited(ip)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
+
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { userAnswer, correctAnswer, originalWord, direction } = await req.json() as {
     userAnswer: string
